@@ -23,5 +23,195 @@ counts=lines.flatMap(lambda x: x.split(" "))
  spark.read.json("json file path")
  spark.read.load("json file path", format="json")
  
+ hive --hiveconf tez.queue.name=operations -e "create table DEV_CL_EPPR_WORK.AUTO_ARE_RB_ITM_OUTPUT stored as parquet as select * from DEV_CL_EPPR_WORK.AUTO_ARE_RB_ITM_OUTPUT_Tmp_orc"
+--8558934357
+Hive - 1.2.1000.2.6.0.3-8
+Spark - 2.1.0
+python - 2.7.15
+scala - 2.12
+phoenix - 
+hdfs dfs -setrep 2 /user/co25602e 
+--Aptwo62019
+WAC1917551525
+--USANP3KA8TB19C
+--H7690390
+
+-- Print string in vertical.
+select SUBSTR('AMIET',LEVEL,1) FROM DUAL connect by level <= length('AMIET');
+Count the repeated character in string:
+SELECT regexp_count('AmitA','A') as repeated_char from dual;
+
+nn_check
+
+hadoop distcp -pb -i -delete -update webhdfs://tdhfd4n2.thehartford.com/apps/hive/warehouse/dev_cl_eppr_mart.db/epapr_acp_hlth_chck_rpt webhdfs://tdhfd6n2.thehartford.com/tmp/co25602e/epapr_acp_hlth_chck_rpt
+--largedataframe.join(broadcast(smalldataframe), "key")
+val tmpDepartments = broadcast(departmentsDF.as("departments"))
+--Below code is sample code that helps us in utilizing memory in an efficient way----------------
+
+from pyspark.sql.functions import *
+trans_df_1.withColumn("part_id",col('emp_id')%5).repartition(5, 'part_id').write.format('parquet').partitionBy("part_id").saveAsTable("ABC.table_1")
+trans_df_2.withColumn("part_id",col('emp_id')%5).repartition(5, 'part_id').write.format('parquet').partitionBy("part_id").saveAsTable("ABC.table_2")
+
+counter =0;
+paritioncount = 5;
+while counter<=paritioncount:
+    query1 ="SELECT * FROM ABC.table_1 where part_id={}".format(counter)
+    query2 ="SELECT * FROM ABC.table_2 where part_id={}".format(counter)
+    TRANS_DF1 =spark.sql(query1)
+    TRANS_DF2 =spark.sql(query2)
+    df1 = TRANS_DF1.alias('df1')
+    df2 = TRANS_DF2.alias('df2')
+    innerjoin_EMP = df1.join(df2, df1.emp_id == df2.emp_id,'inner').select('df1.*')
+    innerjoin_EMP.show()
+    innerjoin_EMP.write.format('parquet').insertInto("ABC.temptable")
+    counter = counter +1
+--Below code is sample code that helps us in utilizing memory in an efficient way----------------
+
+
+---------------------------Incremental Jobs-----------------------------------------
+https://www.linkedin.com/pulse/hive-incremental-update-using-sqoop-surendranatha-reddy-chappidi/
+
+sqoop import --connect jdbc:mysql://localhost/test --table emp
+--username hive -password hive --incremental lastmodified --merge-key employee_id 
+--check-column emp_timestamp
+--target-dir /sqoop/empdata/
+
+--incremental lastmodified will import the updated and new records from RDBMS (MySQL) database based on last latest value of emp_timestamp in Hive.
+--merge-key employee_id will "flatten" two datasets into one, taking the newest available records for each primary key (employee_id).
+Example:
+Let’s assume there 500k records are there in Hive table. In incremental load, we got 100k new employee records and 50k records are updated employee records.
+Above sqoop command will import 150K records and using Merge tool it will append new records (100k) and update the 50k records based on primary key (employee_id).
+
+https://hortonworks.com/blog/four-step-strategy-incremental-updates-hive/
+https://hadoopbaseblog.wordpress.com/2017/05/05/how-to-use-sqoop-export-statement-using-staging-table-and-then-target-table-in-hadoop/
+-----------------------------------------------------------------------------------------------------------
+
+------Streaming code--------------
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+
+ssc = StreamingContext(sc, 2)
+topic = "test"
+brokers = "localhost:9092"
+kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokers})
+lines = kvs.map(lambda x: x[1])
+counts = lines.flatMap(lambda line: line.split(" ")) \
+    .map(lambda word: (word, 1)) \
+    .reduceByKey(lambda a, b: a+b)
+counts.pprint()
+ssc.start()
+ssc.awaitTermination()
+-------------------------------------------------------
+-------------below line shows how broadcast is used------
+sp_mv_join = mline.join(ep,mline['npps_prim_secnd_pk_id'] == ep['npps_prim_secnd_pk_id'])
+                  .join(corpd,mline['bkd_pol_genl_info_pk_id'] == corpd['bkd_pol_corp_trans_pk_id'])
+				  .join(broadcast(cust),mline['cust_seg_pk_id'] == cust['cust_seg_pk_id'])
+				  .select(mline.agmt_pk_id,mline.npps_seg_1_pk,mline.npps_seg_2_pk,mline.specty_pk_id,mline.orig_specty_pk_id,
+				          mline.book_gl_loc_class_sbln_pk_id,mline.book_umb_class_sbln_pk_id,mline.book_wc_st_class_pk_id,mline.book_spectrm_loc_cov_pk_id,mline.bkd_pol_genl_info_pk_id,mline.corp_bkd_ctgy_pk_id,mline.mo_end_snpsht_dt_pk_id,mline.trans_eff_dt_pk_id,mline.trans_acctng_dt_pk_id,mline.bkd_pol_info_pk_id,mline.cov_pk_id,mline.orig_cust_seg_pk_id,mline.cust_seg_pk_id,mline.orig_melob_mlob_pk_id,mline.melob_mlob_pk_id,mline.agmt_gid,mline.book_im_loc_class_sbln_pk_id,mline.book_om_loc_vssl_class_pk_id,mline.book_auto_veh_cov_pk_id,mline.book_prop_loc_cov_pk_id,mline.all_lob_book_common_pk_id,mline.rtbl_prem_amt,mline.rtbl_manl_prem_amt,mline.manl_prem_amt,mline.mline_dir_prem_amt,mline.mline_assmd_prem_amt,mline.mline_ceded_prem_amt,mline.mline_trrsm_dir_prem_amt,mline.mline_trrsm_assmd_prem_amt,mline.mline_trrsm_ceded_prem_amt,mline.dir_manl_prem_amt,mline.ceded_manl_prem_amt,mline.assmd_manl_prem_amt,mline.trrsm_dir_manl_prem_amt,mline.trrsm_assmd_manl_prem_amt,mline.trrsm_ceded_manl_prem_amt,ep.npps_prim_secnd_pk_id,ep.earn_mo_end_dt_pk_id,ep.ep_calc_meth_cd,ep.cal_mo_ep_amt,ep.expsr_mo_ep_amt,ep.ep_cal_month_cd,ep.ep_exposure_month_cd,ep.tail_cov_ep_calc_dt,ep.unearn_prem_amt,ep.batch_id,ep.dw_population_tmsp,ep.dw_lst_upd_tmsp,ep.population_status_cd,corpd.bkd_mline_writing_co_cd,corpd.ratemaking_lob_cd,corpd.rsk_st_cd,corpd.bkd_mline_cd,corpd.bkd_rptg_ro_cd,corpd.summary_lob_desc,cust.csi_cd,cust.bus_seg_cd,cust.bus_seg_grp_cd,corpd.summary_lob_cd)
+------------------------------------------
+------Handling bad records in spark---------------------
+// Creates a json file containing both parsable and corrupted records
+Seq("""{"a": 1, "b": 2}""", """{bad-record""").toDF().write.text("/tmp/input/jsonFile")
+
+val df = spark.read
+  .option("badRecordsPath", "/tmp/badRecordsPath")
+  .schema("a int, b int")
+  .json("/tmp/input/jsonFile")
+
+df.show()
+------------------------------------------------------------------
+--val ssc = new StreamingContext(new SparkConf, Seconds(60))
  
+// hostname:port for Kafka brokers, not Zookeeper
+--val kafkaParams = Map("metadata.broker.list" -> "localhost:9092,anotherhost:9092")
+ 
+--val topics = Set("sometopic", "anothertopic")
+--val stream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaParams, topics)
+
+
+import kafka.serializer.StringDecoder
+    import org.apache.spark.{SparkContext, SparkConf}
+    import org.apache.spark.streaming.kafka.{KafkaUtils, OffsetRange}
+ 
+    val sc = new SparkContext(new SparkConf)
+ 
+    // hostname:port for Kafka brokers, not Zookeeper
+    val kafkaParams = Map("metadata.broker.list" -> "localhost:9092,anotherhost:9092")
+ 
+    val offsetRanges = Array(
+      OffsetRange("sometopic", 0, 110, 220),
+      OffsetRange("sometopic", 1, 100, 313),
+      OffsetRange("anothertopic", 0, 456, 789)
+    )
+ 
+    val rdd = KafkaUtils.createRDD[String, String, StringDecoder, StringDecoder](
+      sc, kafkaParams, offsetRanges)
+
+----------------------------------------------
+SELECT owner, 
+segment_name, 
+segment_type, 
+tablespace_name, 
+bytes/1048576/1048576 GB, 
+ROUND(BYTES / (1024 * 1024)) AS MB, 
+initial_extent, 
+next_extent, 
+extents, 
+pct_increase 
+FROM 
+DBA_SEGMENTS 
+WHERE 
+OWNER = 'CLDW_I5_NPPS_WORK' AND 
+SEGMENT_NAME = 'AUTO_ARE_RB_ITM_OUTPUT' AND 
+SEGMENT_TYPE = 'TABLE'; 
+
+CAL_DIR_RPRC_EPPRPP_AMT - Repriced Current M3 in ACP. Repriced 
+CAL_DIR_EPAPR_PPRC_AMT - For now default to . Weighted.
+--connect to oracle from DEV
+import cx_Oracle
+db=cx_Oracle.connect("/@CLDW_MFG_DEV")
+cursor = db.cursor()
+r=cursor.execute("SELECT count(*) AS REC_COUNT from EDW_DM.EPAPR_AUTO_HLTH_CHK_RPT")
+for REC_COUNT in cursor:
+    print(REC_COUNT)
+
+
+
+ARE ACP query check: 
+ 
+SELECT COUNT (*) 
+  FROM CLACT_AUTO_ARE_DATA.AUTO_ARE_RB_ITM_OUTPUT 
+ WHERE     (1 = 0) 
+       AND EXISTS 
+               (SELECT 'X' 
+                  FROM (SELECT ITERATION_NBR ITERATION_NUM 
+                          FROM CLACT_AUTO_ARE_DATA.AUTO_EPPR_BATCH_ITR) 
+                 WHERE ITERATION_NUM = ITERATION_NBR); 
+				  
+sqoopDataIngestion.sh -c "CLDW_I5_NPPS_WORK|AUTO_EPPR_BATCH_ITR|DEV_CL_EPPR_PSTAGE|AUTO_EPPR_BATCH_ITR"
+PROD IMPORT:
+sh /data/lake/code/cl/eppr/scripts/sqoop/sqoop_import/sqoopDataIngestion.sh -c "EDW_DM|AGREEMENT_VEH_DIM|LAKE_CL_EPPR_PSTAGE|AGREEMENT_VEH_DIM|AGMT_VEH_PK_ID|32"
+
+SELECT summary_lob_cd,
+       summary_lob_desc,
+       bkd_mline_writing_co_cd,
+       ratemaking_lob_cd,
+       bkd_pol_corp_trans_pk_id,
+       CASE WHEN rsk_st_cd = '51' THEN '31' ELSE rsk_st_cd END rsk_st_cd,
+       bkd_mline_cd
+    FROM {0}_{1}.bkd_pol_corp_trans_dim
+    WHERE summary_lob_desc IN ('SPECTRUM',
+                            'SPECTRUM UMBRELLA',
+                            'GENERAL LIABILITY',
+                            'WORKERS COMPENSATION') 
+SELECT prod_ro_cd,
+       pol_sym_cd,
+       pol_num,
+       pol_eff_dt,
+       agmt_gid,
+       gov_sic_4_digit_cd,
+       spectrm_rtng_product_desc
+    FROM {0}_{1}.d_policy_composite
+    WHERE TO_DATE (srce_eff_end_tmsp) = '9999-12-31' 
+--'GROWING SPECTRUM REMODEL'
  
