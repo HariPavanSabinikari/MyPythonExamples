@@ -1,0 +1,10 @@
+https://github.com/apache/spark/tree/master/examples/src/main/python -- spark with python examples.
+https://www.guru99.com/hive-partitions-buckets-example.html -- hive partitioning and bucketing with examples
+https://github.com/adaptives/python-examples/tree/master/basic_examples -- This is for Python basic examples.
+In order to use APIs of SQL,HIVE , and Streaming, separate contexts need to be created.
+like
+
+val conf=newSparkConf()
+val sc = new SparkContext(conf)
+val hc = new hiveContext(sc)
+val ssc = new streamingContext(sc).

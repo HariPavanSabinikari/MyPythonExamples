@@ -1,5 +1,8 @@
 print("hello")
 
+for i in range(5,-1,-1):
+    print(i)
+
 #Using Socket to get hostname
 import socket
 hostname=socket.gethostname();

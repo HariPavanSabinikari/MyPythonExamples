@@ -1,0 +1,27 @@
+--pyspark
+
+--word count example using python
+from __future__ import print_function
+from operator import add
+from pyspark.sql import SparkSession
+
+if __name__=="__main__":
+  if len(sys.argv)!=2:
+     print("Usage: wordcount <file>",file=sys.stderr)
+     System.exit(-1)
+     
+spark=SparkSession.builder().appName("wordcountexample").getOrCreate()
+lines=spark.read.text(argv[1]).rdd.map(lambda r:r[0])
+counts=lines.flatMap(lambda x: x.split(" "))
+            .map(lambda x: (x,1))
+            .reduceByKey(add)
+ outputs=counts.collect()
+ for (word,count) in outputs:
+    print("%s: %i"%(word,count))
+    
+ -- read file from json using pyspark
+ spark.read.json("json file path")
+ spark.read.load("json file path", format="json")
+ 
+ 
+ 
