@@ -1,4 +1,4 @@
-from StdSuites.Table_Suite import row
+
 def is_descending(index,k):
     return index % (2*(k-1)) < k-1
 
